@@ -1,6 +1,8 @@
-# flyingjedi.vim
+# FlyJedi.vim
 
-Successor of [miyakogi/asyncjedi](https://github.com/miyakogi/asyncjedi).
+Asynchronous, non-blocking python auto-comletion plugin for vim.
+
+This is a successor of [miyakogi/asyncjedi](https://github.com/miyakogi/asyncjedi).
 
 ## Features
 
@@ -46,7 +48,7 @@ This plugin searches `setup.py` upwards from the current file, to find the proje
 If you want to use another file name, for example `.gitignore`, add the following setting.
 
 ```vim
-let g:flyingjedi_root_filename = '.gitignore'
+let g:flyjedi_root_filename = '.gitignore'
 ```
 
 ### Additional information
@@ -56,9 +58,9 @@ By default, this plugin does not show additional information about completion it
 If you prefer to show additional information, please add the bellow setting.
 
 ```vim
-let g:flyingjedi_detail_info = 1
+let g:flyjedi_detail_info = 1
 " or, for buffer
-" let b:flyingjedi_detail_info = 1
+" let b:flyjedi_detail_info = 1
 ```
 
 #### Caution
