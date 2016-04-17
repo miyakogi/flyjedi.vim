@@ -93,14 +93,6 @@ class Complete(object):
         resp.append(self.path)
         return resp
 
-    def get_goto_definitons(self):
-        s = self._get_script(col=self.col)
-        for d in s.goto_definitions():
-            # print(vars(d))
-            # print(d.name)
-            # print(d.module_path)
-            pass
-
     def _to_complete_item(self, c) -> dict:
         d = dict(
             word=c.name,
@@ -150,13 +142,5 @@ def complete(msg, transport):
     c = Complete(msg, transport)
     handle = msg[0]
     response = yield from c.get_completion_results()
-    if not transport._closing:
-        transport.write(json.dumps([handle, response]).encode('utf-8'))
-
-
-def goto_assignments(msg, transport):
-    c = Complete(msg, transport)
-    handle = msg[0]
-    response = c.get_goto_definitons()
     if not transport._closing:
         transport.write(json.dumps([handle, response]).encode('utf-8'))

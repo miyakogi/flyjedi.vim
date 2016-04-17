@@ -75,21 +75,6 @@ function! flyjedi#complete() abort
   return ''
 endfunction
 
-" goto is not implemented
-function! flyjedi#goto_assignments_cb(ch, msg) abort
-  call ch_close(a:ch)
-endfunction
-
-" goto is not implemented
-function! flyjedi#goto_assignments() abort
-  if flyjedi#is_running()
-    let ch = s:setup_channel()
-    let msg = s:init_msg()
-    let msg['mode'] = 'goto_assignments'
-    call s:send(ch, msg, {'callback': 'flyjedi#goto_assignments_cb'})
-  endif
-endfunction
-
 function! flyjedi#clear_cache() abort
   if flyjedi#is_running()
     let ch = ch_open('localhost:' . s:port, {'mode': 'json'})
