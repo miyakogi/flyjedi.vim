@@ -27,26 +27,39 @@ function! flyingjedi#complete_cb(ch, msg) abort
   endif
 endfunction
 
+function! s:setup_channel() abort
+  let ch = ch_open('localhost:' . s:port, {'mode': 'json', 'waittime': 3})
+  let st = ch_status(ch)
+  if st !=# 'open'
+    echoerr 'channel error: ' . st
+  endif
+  return ch
+endfunction
+
+function! s:send(ch, msg, ...) abort
+  if a:0 > 0
+    let cb = a:1
+  else
+    let cb = {}
+  endif
+  call ch_sendexpr(a:ch, a:msg, cb)
+  call s:ch_clear()
+  let s:handlers = [a:ch]
+endfunction
+
 function! s:complete() abort
   if flyingjedi#is_running()
-    let ch = ch_open('localhost:' . s:port, {'mode': 'json', 'waittime': 3})
-    let st = ch_status(ch)
-    if st ==# 'open'
-      let msg = {}
-      let msg.line = line('.')
-      let msg.col = col('.')
-      let msg.text = getline(0, '$')
-      let msg.path = expand('%:p')
-      let msg.root = get(b:, 'flyingjedi_root_dir')
-      let msg.detail = get(b:, 'flyingjedi_detail_info', get(g:, 'flyingjedi_detail_info'))
-      let msg.fuzzy = get(b:, 'flyingjedi_fuzzy_match', get(g:, 'flyingjedi_fuzzy_match'))
-      let msg.icase = get(b:, 'flyingjedi_ignore_case', get(g:, 'flyingjedi_ignore_case'))
-      call ch_sendexpr(ch, msg, {'callback': 'flyingjedi#complete_cb'})
-      call s:ch_clear()
-      let s:handlers = [ch]
-    else
-      echomsg 'channel error: ' . st
-    endif
+    let ch = s:setup_channel()
+    let msg = {}
+    let msg.line = line('.')
+    let msg.col = col('.')
+    let msg.text = getline(0, '$')
+    let msg.path = expand('%:p')
+    let msg.root = get(b:, 'flyingjedi_root_dir')
+    let msg.detail = get(b:, 'flyingjedi_detail_info', get(g:, 'flyingjedi_detail_info'))
+    let msg.fuzzy = get(b:, 'flyingjedi_fuzzy_match', get(g:, 'flyingjedi_fuzzy_match'))
+    let msg.icase = get(b:, 'flyingjedi_ignore_case', get(g:, 'flyingjedi_ignore_case'))
+    call s:send(ch, msg, {'callback': 'flyingjedi#complete_cb'})
   endif
   return ''
 endfunction
