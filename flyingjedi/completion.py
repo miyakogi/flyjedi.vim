@@ -22,19 +22,12 @@ class Complete(object):
         self.line = info['line']
         self.text = info['text']
         self.path = info['path']
-        self.detail = bool(info['detail'])
-        self.fuzzy = bool(info['fuzzy'])
-        self.icase = bool(info['icase'])
         root = info.get('root')
         if root and root not in sys.path:
             sys.path.append(root)
 
-        self.cur_line = self.text[self.line - 1][:self.col-1]
-
-        match = re.search(r'\w+$', self.cur_line)
-        self.word = match.group(0) if match else ''
-        self.start_col = self.col - 1 - len(self.word)
-        self.line_text = self.cur_line[:self.start_col]
+    def clear_cache(self):
+        self._cache.clear()
 
     def _is_cached(self, import_match):
         if import_match:
@@ -52,6 +45,12 @@ class Complete(object):
                     len(self.text) == len(self._cache.get('text')) and
                     line_text == prev_line)
 
+    def _get_script(self, line=None, col=None):
+        if line is None:
+            line = self.line
+        s = Script('\n'.join(self.text), line=line, column=col)
+        return s
+
     def _get_completions(self):
         import_match = import_re.match(self.line_text)
         if not self._is_cached(import_match):
@@ -59,8 +58,7 @@ class Complete(object):
                 start_col = len(import_match.group(0))
             else:
                 start_col = self.start_col
-            s = Script('\n'.join(self.text), line=self.line,
-                       column=start_col)
+            s = self._get_script(line=self.line, col=start_col)
             self._cache.update(path=self.path, line=self.line, text=self.text,
                                line_text=self.line_text,
                                completions=tuple(s.completions()))
@@ -68,6 +66,16 @@ class Complete(object):
 
     @asyncio.coroutine
     def complete(self):
+        self.detail = bool(self.info.get('detail'))
+        self.fuzzy = bool(self.info.get('fuzzy'))
+        self.icase = bool(self.info.get('icase'))
+        self.cur_line = self.text[self.line - 1][:self.col-1]
+
+        match = re.search(r'\w+$', self.cur_line)
+        self.word = match.group(0) if match else ''
+        self.start_col = self.col - 1 - len(self.word)
+        self.line_text = self.cur_line[:self.start_col]
+
         if self.word and self.fuzzy:
             result = yield from self.fuzzy_match()
         else:
@@ -75,7 +83,7 @@ class Complete(object):
         return result
 
     @asyncio.coroutine
-    def get_result(self):
+    def get_completion_results(self):
         result = yield from self.complete()
         resp = [self.start_col+1]
         if result:
@@ -84,6 +92,14 @@ class Complete(object):
             resp.append([])
         resp.append(self.path)
         return resp
+
+    def get_goto_definitons(self):
+        s = self._get_script(col=self.col)
+        for d in s.goto_definitions():
+            # print(vars(d))
+            # print(d.name)
+            # print(d.module_path)
+            pass
 
     def _to_complete_item(self, c) -> dict:
         d = dict(
@@ -133,6 +149,14 @@ class Complete(object):
 def complete(msg, transport):
     c = Complete(msg, transport)
     handle = msg[0]
-    response = yield from c.get_result()
+    response = yield from c.get_completion_results()
+    if not transport._closing:
+        transport.write(json.dumps([handle, response]).encode('utf-8'))
+
+
+def goto_assignments(msg, transport):
+    c = Complete(msg, transport)
+    handle = msg[0]
+    response = c.get_goto_definitons()
     if not transport._closing:
         transport.write(json.dumps([handle, response]).encode('utf-8'))

@@ -16,17 +16,6 @@ function! flyingjedi#is_running() abort
   endif
 endfunction
 
-function! flyingjedi#complete_cb(ch, msg) abort
-  call ch_close(a:ch)
-  if mode() ==# 'i' && expand('%:p') ==# a:msg[2]
-    call complete(a:msg[0], a:msg[1])
-  endif
-  let ind = index(s:handlers, a:ch)
-  if ind >= 0
-    call remove(s:handlers, ind)
-  endif
-endfunction
-
 function! s:setup_channel() abort
   let ch = ch_open('localhost:' . s:port, {'mode': 'json', 'waittime': 3})
   let st = ch_status(ch)
@@ -34,6 +23,16 @@ function! s:setup_channel() abort
     echoerr 'channel error: ' . st
   endif
   return ch
+endfunction
+
+function! s:init_msg() abort
+  let msg = {}
+  let msg.line = line('.')
+  let msg.col = col('.')
+  let msg.text = getline(0, '$')
+  let msg.path = expand('%:p')
+  let msg.root = get(b:, 'flyingjedi_root_dir')
+  return msg
 endfunction
 
 function! s:send(ch, msg, ...) abort
@@ -47,15 +46,22 @@ function! s:send(ch, msg, ...) abort
   let s:handlers = [a:ch]
 endfunction
 
+function! flyingjedi#complete_cb(ch, msg) abort
+  call ch_close(a:ch)
+  if mode() ==# 'i' && expand('%:p') ==# a:msg[2]
+    call complete(a:msg[0], a:msg[1])
+  endif
+  let ind = index(s:handlers, a:ch)
+  if ind >= 0
+    call remove(s:handlers, ind)
+  endif
+endfunction
+
 function! s:complete() abort
   if flyingjedi#is_running()
     let ch = s:setup_channel()
-    let msg = {}
-    let msg.line = line('.')
-    let msg.col = col('.')
-    let msg.text = getline(0, '$')
-    let msg.path = expand('%:p')
-    let msg.root = get(b:, 'flyingjedi_root_dir')
+    let msg = s:init_msg()
+    let msg['mode'] = 'completion'
     let msg.detail = get(b:, 'flyingjedi_detail_info', get(g:, 'flyingjedi_detail_info'))
     let msg.fuzzy = get(b:, 'flyingjedi_fuzzy_match', get(g:, 'flyingjedi_fuzzy_match'))
     let msg.icase = get(b:, 'flyingjedi_ignore_case', get(g:, 'flyingjedi_ignore_case'))
@@ -67,6 +73,21 @@ endfunction
 function! flyingjedi#complete() abort
   call s:complete()
   return ''
+endfunction
+
+" goto is not implemented
+function! flyingjedi#goto_assignments_cb(ch, msg) abort
+  call ch_close(a:ch)
+endfunction
+
+" goto is not implemented
+function! flyingjedi#goto_assignments() abort
+  if flyingjedi#is_running()
+    let ch = s:setup_channel()
+    let msg = s:init_msg()
+    let msg['mode'] = 'goto_assignments'
+    call s:send(ch, msg, {'callback': 'flyingjedi#goto_assignments_cb'})
+  endif
 endfunction
 
 function! flyingjedi#clear_cache() abort
