@@ -8,6 +8,8 @@ import asyncio
 
 from jedi.api import Script
 
+import_re = re.compile(r'^\s*from\s+.+\s+import\s+')
+
 
 class Complete(object):
     _cache = {}
@@ -34,13 +36,31 @@ class Complete(object):
         self.start_col = self.col - 1 - len(self.word)
         self.line_text = self.cur_line[:self.start_col]
 
+    def _is_cached(self, import_match):
+        if import_match:
+            line_text = import_match.group(0)
+            prev_import = import_re.match(self._cache.get('line_text'))
+            if prev_import is None:
+                return False
+            else:
+                prev_line = prev_import.group(0)
+        else:
+            line_text = self.line_text
+            prev_line = self._cache.get('line_text')
+        return bool(self.path == self._cache.get('path') and
+                    self.line == self._cache.get('line') and
+                    len(self.text) == len(self._cache.get('text')) and
+                    line_text == prev_line)
+
     def _get_completions(self):
-        if not (self.path == self._cache.get('path') and
-                self.line == self._cache.get('line') and
-                len(self.text) == len(self._cache.get('text')) and
-                self.line_text == self._cache.get('line_text')):
+        import_match = import_re.match(self.line_text)
+        if not self._is_cached(import_match):
+            if import_match:
+                start_col = len(import_match.group(0))
+            else:
+                start_col = self.start_col
             s = Script('\n'.join(self.text), line=self.line,
-                       column=self.start_col)
+                       column=start_col)
             self._cache.update(path=self.path, line=self.line, text=self.text,
                                line_text=self.line_text,
                                completions=tuple(s.completions()))
@@ -60,10 +80,10 @@ class Complete(object):
         resp = [self.start_col+1]
         if result:
             resp.append(result)
-            resp.append(self.path)
-            return resp
         else:
-            return resp
+            resp.append([])
+        resp.append(self.path)
+        return resp
 
     def _to_complete_item(self, c) -> dict:
         d = dict(
