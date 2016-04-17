@@ -2,6 +2,12 @@ if get(b:, 'loaded_flyingjedi')
   finish
 endif
 
+" version check
+if !has('channel') || !has('job')
+  echoerr '+channel and +job is required for flyingjedi.vim'
+  finish
+endif
+
 setlocal completeopt+=noinsert
 
 if !flyingjedi#is_running()
