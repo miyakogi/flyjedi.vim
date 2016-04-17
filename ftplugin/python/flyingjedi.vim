@@ -2,6 +2,8 @@ if get(b:, 'loaded_flyingjedi')
   finish
 endif
 
+setlocal completeopt+=noinsert
+
 if !flyingjedi#is_running()
   call flyingjedi#start_server()
 endif
