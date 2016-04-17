@@ -7,7 +7,7 @@ import socket
 import asyncio
 
 from option import options
-from completion import complete, Complete, goto_assignments
+from completion import complete, Complete
 
 _tasks = []
 
@@ -40,8 +40,6 @@ class IOServer(asyncio.Protocol):
         elif mode == 'completion':
             self.task = ensure_future(complete(msg, self.transport))
             _tasks.append(self.task)
-        elif mode == 'goto_assignments':
-            goto_assignments(msg, self.transport)
 
     def eof_received(self):
         if self.task in _tasks and not self.task.done():

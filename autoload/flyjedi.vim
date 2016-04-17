@@ -1,14 +1,14 @@
-let s:pyserver = expand('<sfile>:p:h:h') . '/flyingjedi'
+let s:pyserver = expand('<sfile>:p:h:h') . '/flyjedi'
 let s:handlers = []
 
-function! flyingjedi#set_root(fname) abort
+function! flyjedi#set_root(fname) abort
   let file = findfile(a:fname, escape(expand('<afile>:p:h'), ' ') . ';')
   if l:file != ''
-    let b:flyingjedi_root_dir = substitute(l:file, '/setup.py$', '', 'g' )
+    let b:flyjedi_root_dir = substitute(l:file, '/setup.py$', '', 'g' )
   endif
 endfunction
 
-function! flyingjedi#is_running() abort
+function! flyjedi#is_running() abort
   if exists('s:port')
     return v:true
   else
@@ -31,7 +31,7 @@ function! s:init_msg() abort
   let msg.col = col('.')
   let msg.text = getline(0, '$')
   let msg.path = expand('%:p')
-  let msg.root = get(b:, 'flyingjedi_root_dir')
+  let msg.root = get(b:, 'flyjedi_root_dir')
   return msg
 endfunction
 
@@ -46,7 +46,7 @@ function! s:send(ch, msg, ...) abort
   let s:handlers = [a:ch]
 endfunction
 
-function! flyingjedi#complete_cb(ch, msg) abort
+function! flyjedi#complete_cb(ch, msg) abort
   call ch_close(a:ch)
   if mode() ==# 'i' && expand('%:p') ==# a:msg[2]
     call complete(a:msg[0], a:msg[1])
@@ -58,40 +58,25 @@ function! flyingjedi#complete_cb(ch, msg) abort
 endfunction
 
 function! s:complete() abort
-  if flyingjedi#is_running()
+  if flyjedi#is_running()
     let ch = s:setup_channel()
     let msg = s:init_msg()
     let msg['mode'] = 'completion'
-    let msg.detail = get(b:, 'flyingjedi_detail_info', get(g:, 'flyingjedi_detail_info'))
-    let msg.fuzzy = get(b:, 'flyingjedi_fuzzy_match', get(g:, 'flyingjedi_fuzzy_match'))
-    let msg.icase = get(b:, 'flyingjedi_ignore_case', get(g:, 'flyingjedi_ignore_case'))
-    call s:send(ch, msg, {'callback': 'flyingjedi#complete_cb'})
+    let msg.detail = get(b:, 'flyjedi_detail_info', get(g:, 'flyjedi_detail_info'))
+    let msg.fuzzy = get(b:, 'flyjedi_fuzzy_match', get(g:, 'flyjedi_fuzzy_match'))
+    let msg.icase = get(b:, 'flyjedi_ignore_case', get(g:, 'flyjedi_ignore_case'))
+    call s:send(ch, msg, {'callback': 'flyjedi#complete_cb'})
   endif
   return ''
 endfunction
 
-function! flyingjedi#complete() abort
+function! flyjedi#complete() abort
   call s:complete()
   return ''
 endfunction
 
-" goto is not implemented
-function! flyingjedi#goto_assignments_cb(ch, msg) abort
-  call ch_close(a:ch)
-endfunction
-
-" goto is not implemented
-function! flyingjedi#goto_assignments() abort
-  if flyingjedi#is_running()
-    let ch = s:setup_channel()
-    let msg = s:init_msg()
-    let msg['mode'] = 'goto_assignments'
-    call s:send(ch, msg, {'callback': 'flyingjedi#goto_assignments_cb'})
-  endif
-endfunction
-
-function! flyingjedi#clear_cache() abort
-  if flyingjedi#is_running()
+function! flyjedi#clear_cache() abort
+  if flyjedi#is_running()
     let ch = ch_open('localhost:' . s:port, {'mode': 'json'})
     let st = ch_status(ch)
     if st ==# 'open'
@@ -112,27 +97,27 @@ function! s:ch_clear() abort
   endfor
 endfunction
 
-function! flyingjedi#server_started(ch, msg) abort
+function! flyjedi#server_started(ch, msg) abort
   if a:msg =~ '\m^\d\+$'
     let s:port = str2nr(a:msg)
   elseif a:msg == '' || a:msg ==# 'DETACH'
     return
   else
-    echomsg 'FlyingJediServer message: ' . string(a:msg)
+    echomsg 'FlyJediServer message: ' . string(a:msg)
   endif
 endfunction
 
-function! flyingjedi#wrap_ce(s) abort
+function! flyjedi#wrap_ce(s) abort
   return "\<C-e>" . a:s
 endfunction
 
-let s:closepum=' <C-r>=pumvisible()?flyingjedi#wrap_ce("'
+let s:closepum=' <C-r>=pumvisible()?flyjedi#wrap_ce("'
 function! s:map(s) abort
   let cmd = 'inoremap <buffer><silent> ' . a:s . s:closepum . a:s . '"):"' . a:s . '"<CR>'
   execute cmd
 endfunction
 
-function! flyingjedi#mapping() abort
+function! flyjedi#mapping() abort
   for k in split('abcdefghijklmnopqrstuvwxyz', '\zs')
     call s:map(k)
     call s:map(toupper(k))
@@ -146,15 +131,15 @@ function! flyingjedi#mapping() abort
   call s:map('\<C-h>')
 endfunction
 
-function! flyingjedi#start_server() abort
+function! flyjedi#start_server() abort
   let ch = ch_open('localhost:8891', {'waittime': 10})
   if ch_status(ch) ==# 'open'
     " for debug
     let s:port = 8891
-    echomsg 'flyingjedi: use debug server at localhost:8891'
+    echomsg 'flyjedi: use debug server at localhost:8891'
     call ch_close(ch)
   else
     let cmd = ['python3', s:pyserver]
-    let s:server = job_start(cmd, {'callback': 'flyingjedi#server_started'})
+    let s:server = job_start(cmd, {'callback': 'flyjedi#server_started'})
   endif
 endfunction
