@@ -48,8 +48,14 @@ endfunction
 
 function! flyjedi#complete_cb(ch, msg) abort
   call ch_close(a:ch)
-  if mode() ==# 'i' && expand('%:p') ==# a:msg[2]
-    call complete(a:msg[0], a:msg[1])
+  if mode() ==# 'i' && expand('%:p') ==# a:msg.path
+    if a:msg.mode ==# 'grammer'
+      call complete(a:msg.start_col, a:msg.items)
+    elseif a:msg.mode ==# 'path'
+      call feedkeys("\<C-x>\<C-f>")
+    elseif a:msg.mode ==# 'string'
+      call feedkeys("\<C-x>\<C-n>")
+    endif
   endif
   let ind = index(s:handlers, a:ch)
   if ind >= 0
@@ -63,8 +69,8 @@ function! s:complete() abort
     let msg = s:init_msg()
     let msg['mode'] = 'completion'
     let msg.detail = get(b:, 'flyjedi_detail_info', get(g:, 'flyjedi_detail_info'))
-    let msg.fuzzy = get(b:, 'flyjedi_fuzzy_match', get(g:, 'flyjedi_fuzzy_match'))
-    let msg.icase = get(b:, 'flyjedi_ignore_case', get(g:, 'flyjedi_ignore_case'))
+    let msg.fuzzy = !get(b:, 'flyjedi_no_fuzzy', get(g:, 'flyjedi_no_fuzzy'))
+    let msg.icase = !get(b:, 'flyjedi_no_icase', get(g:, 'flyjedi_no_icase'))
     call s:send(ch, msg, {'callback': 'flyjedi#complete_cb'})
   endif
   return ''
