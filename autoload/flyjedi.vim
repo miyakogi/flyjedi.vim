@@ -1,10 +1,11 @@
 let s:pyserver = expand('<sfile>:p:h:h') . '/flyjedi'
 let s:handlers = []
 
-function! flyjedi#set_root(fname) abort
-  let file = findfile(a:fname, escape(expand('<afile>:p:h'), ' ') . ';')
+function! flyjedi#set_root() abort
+  let fname = get(g:, 'flyjedi_root_filename', 'setup.py')
+  let file = findfile(fname, escape(expand('<afile>:p:h'), ' ') . ';')
   if l:file != ''
-    let b:flyjedi_root_dir = substitute(l:file, '/setup.py$', '', 'g' )
+    let b:flyjedi_root_dir = substitute(l:file, '/' . fname . '$', '', 'g' )
   endif
 endfunction
 
@@ -44,6 +45,10 @@ function! s:send(ch, msg, ...) abort
   call ch_sendexpr(a:ch, a:msg, cb)
   call s:ch_clear()
   let s:handlers = [a:ch]
+endfunction
+
+function! flyjedi#dummyomni(findstart, base) abort
+  return a:findstart ? -3 : []
 endfunction
 
 function! flyjedi#complete_cb(ch, msg) abort
@@ -138,6 +143,7 @@ function! flyjedi#mapping() abort
 endfunction
 
 function! flyjedi#start_server() abort
+  call flyjedi#set_root()
   let ch = ch_open('localhost:8891', {'waittime': 10})
   if ch_status(ch) ==# 'open'
     " for debug
