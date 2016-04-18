@@ -24,8 +24,8 @@ This plugin will not conflict with jedi-vim if you disable the auto completion o
 
 ## Usage
 
-This plugin will conflict with other completion plugins.
-So you need to disable it.
+This plugin may conflict with other completion plugins.
+So I recommend to disable them on python files.
 
 Example (neocomplete)
 
@@ -56,6 +56,7 @@ let g:flyjedi_root_filename = '.gitignore'
 By default, this plugin does not show additional information about completion items.
 
 If you prefer to show additional information, please add the bellow setting.
+With this option, information will be shown on preview window and completion menu, if possible.
 
 ```vim
 let g:flyjedi_detail_info = 1
