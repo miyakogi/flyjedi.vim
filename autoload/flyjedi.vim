@@ -91,7 +91,7 @@ function! flyjedi#enable() abort
   augroup END
 endfunction
 
-function! flyjedi#disbable() abort
+function! flyjedi#disable() abort
   augroup flyjedi
     autocmd!
   augroup END
