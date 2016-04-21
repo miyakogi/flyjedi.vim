@@ -7,7 +7,7 @@ import socket
 import asyncio
 
 from option import options
-from completion import complete, Complete
+from completion import complete, PythonComplete
 
 _tasks = []
 
@@ -34,10 +34,10 @@ class IOServer(asyncio.Protocol):
             _t.cancel()
 
         msg = json.loads(data.decode('utf-8'))
-        mode = msg[1].get('mode')
-        if mode == 'clear_cache':
-            Complete.clear_cache()
-        elif mode == 'completion':
+        action = msg[1].get('action')
+        if action == 'clear_cache':
+            PythonComplete.clear_cache()
+        elif action == 'completion':
             self.task = ensure_future(complete(msg, self.transport))
             _tasks.append(self.task)
 

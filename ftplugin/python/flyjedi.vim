@@ -8,17 +8,18 @@ if !has('channel') || !has('job')
   finish
 endif
 
+command! -buffer FlyJediEnable call flyjedi#enable()
+command! -buffer FlyJediDisable call flyjedi#disable()
+command! -buffer FlyJediClear call flyjedi#completion#clear_cache()
 setlocal completeopt+=noinsert
 setlocal omnifunc=flyjedi#dummyomni
-inoremap <buffer> <C-x><C-o> <C-R>=flyjedi#complete()<CR>
-autocmd TextChangedI,InsertEnter <buffer> call flyjedi#complete()
 
-if !flyjedi#is_running()
-  call flyjedi#start_server()
+if !get(g:, 'flyjedi_no_autostart')
+  call flyjedi#enable()
 endif
-
-if !exists(':FlyJediClear')
-  command!  FlyJediClear call flyjedi#clear_cache()
+if !get(g:, 'flyjedi_no_keymap')
+  let keybind = get(g:, 'flyjedi_complete_key', '<C-x><C-o>')
+  execute 'inoremap <buffer> ' . keybind . ' <C-R>=flyjedi#completion#complete()<CR>'
 endif
 
 let b:loaded_flyjedi = 1
