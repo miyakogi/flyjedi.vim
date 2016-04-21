@@ -95,6 +95,8 @@ function! flyjedi#disbable() abort
   augroup flyjedi
     autocmd!
   augroup END
+  let &completeopt = b:_flyjedi_old_completeopt
+  let &omnifunc = b:_flyjedi_old_omnifunc
 endfunction
 
 function! flyjedi#initialize_buffer() abort
@@ -102,13 +104,15 @@ function! flyjedi#initialize_buffer() abort
   command! -buffer FlyJediDisable call flyjedi#disable()
   command! -buffer FlyJediClear call flyjedi#completion#clear_cache()
 
-  if !get(g:, 'flyjedi_no_autoenable')
+  if !get(g:, 'flyjedi_no_autostart')
     call flyjedi#enable()
   endif
+  let b:_flyjedi_old_completeopt = &completeopt
   setlocal completeopt+=noinsert
+  let b:_flyjedi_old_omnifunc = &omnifunc
   setlocal omnifunc=flyjedi#dummyomni
   if !get(g:, 'flyjedi_no_keymap')
-    let keybind = get(g:, 'flyjedi_complete_key', '<C-x><C-o>')
+    let keybind = get(g:, 'flyjedi_completions_command', '<C-x><C-o>')
     execute 'inoremap <buffer> ' . keybind . ' <C-R>=flyjedi#completion#complete()<CR>'
   endif
 endfunction
