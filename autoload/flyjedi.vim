@@ -92,7 +92,6 @@ function! flyjedi#start_server(...) abort
     let server = s:get_server()
     if !get(server, 'port')
       " New server for this buffer
-      echomsg 'start new server'
       let cmd = ['python3', s:pyserver]
       let server.job = job_start(cmd, {'callback': function('flyjedi#server_cd', [server])})
       let s:servers[b:flyjedi_root_dir] = server
