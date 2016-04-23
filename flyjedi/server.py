@@ -62,8 +62,7 @@ def start_server():
     for sock in server.sockets:
         if sock.family == socket.AF_INET:
             port = sock.getsockname()[1]
-            print('{}\n'.format(port))
-            sys.stdout.flush()
+            print('{}\n'.format(port), flush=True)
             break
     try:
         loop.run_forever()
