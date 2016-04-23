@@ -152,7 +152,7 @@ class PythonComplete(object):
         if import_match:
             start_col = len(import_match.group(0))
         else:
-            start_col = self.start_col
+            start_col = self.col - 1
         s = self._get_script(line=self.line, col=start_col)
         completions = tuple(s.completions())
         self._cache.update(path=self.path, line=self.line, text=self.text,
@@ -165,20 +165,21 @@ class PythonComplete(object):
         self.detail = bool(self.info.get('detail'))
         self.fuzzy = bool(self.info.get('fuzzy'))
         self.icase = bool(self.info.get('icase'))
-        self.cur_line = self.text[self.line - 1][:self.col-1]
+        self.cur_line = self.text[self.line - 1][:self.col - 1]
 
         match = word_re.search(self.cur_line)
         self.word = match.group(0) if match else ''
         self.start_col = self.col - 1 - len(self.word)
         self.line_text = self.cur_line[:self.start_col]
 
-        cached = self._is_cached()
-        completions = (self._cache.get('completions')
-                       if cached else self._get_completions())
-        if self.word:
-            result = yield from self.fuzzy_complete(completions)
+        if self._is_cached():
+            completions = self._cache.get('completions')
         else:
-            result = yield from self.normal_complete(completions)
+            completions = self._get_completions()
+        if self.word:
+            result = yield from self.fuzzy_completion(completions)
+        else:
+            result = yield from self.all_completion(completions)
         result['start_col'] = self.start_col + 1
         return result
 
@@ -192,7 +193,7 @@ class PythonComplete(object):
         d = dict(
             word=c.name,
             abbr=c.name,
-            icase=1,
+            icase=1 if self.icase else 0,
         )
         if self.detail:
             # To obtain these information, sometimes jedi takes TOO LONG TIME.
@@ -201,7 +202,7 @@ class PythonComplete(object):
         return d
 
     @asyncio.coroutine
-    def fuzzy_complete(self, completions):
+    def fuzzy_completion(self, completions):
         result = []
         exact_re = re.compile(r'^' + self.word)
         icase_re = re.compile(r'^' + self.word, re.I)
@@ -224,7 +225,7 @@ class PythonComplete(object):
         return {'success': True, 'items': result, 'mode': 'jedi'}
 
     @asyncio.coroutine
-    def normal_complete(self, completions):
+    def all_completion(self, completions):
         result = [self._to_complete_item(c) for c in completions]
         yield from asyncio.sleep(0)
         return {'success': True, 'items': result, 'mode': 'jedi'}
