@@ -175,7 +175,7 @@ class PythonComplete(object):
         cached = self._is_cached()
         completions = (self._cache.get('completions')
                        if cached else self._get_completions())
-        if self.word and self.fuzzy:
+        if self.word:
             result = yield from self.fuzzy_complete(completions)
         else:
             result = yield from self.normal_complete(completions)
