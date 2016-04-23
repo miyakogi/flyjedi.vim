@@ -68,7 +68,7 @@ function! flyjedi#send(ch, msg, ...) abort
   let s:handlers = [a:ch]
 endfunction
 
-function! flyjedi#start_server() abort
+function! flyjedi#start_server(...) abort
   call flyjedi#set_root()
   let ch = ch_open('localhost:8891', {'waittime': 10})
   if ch_status(ch) ==# 'open'
@@ -80,6 +80,18 @@ function! flyjedi#start_server() abort
     let cmd = ['python3', s:pyserver]
     let s:server = job_start(cmd, {'callback': 'flyjedi#server_cd'})
   endif
+endfunction
+
+function! flyjedi#stop_server(...) abort
+  if flyjedi#is_running() && exists('s:server')
+    call job_stop(s:server)
+    let s:port = -1
+  endif
+endfunction
+
+function! flyjedi#restart_server() abort
+  call flyjedi#stop_server()
+  call timer_start(300, 'flyjedi#start_server')
 endfunction
 
 function! flyjedi#enable() abort
@@ -102,6 +114,7 @@ endfunction
 function! flyjedi#initialize_buffer() abort
   command! -buffer FlyJediEnable call flyjedi#enable()
   command! -buffer FlyJediDisable call flyjedi#disable()
+  command! -buffer FlyJediRestart call flyjedi#restart_server()
   command! -buffer FlyJediClear call flyjedi#completion#clear_cache()
 
   if !get(g:, 'flyjedi_no_autostart')
