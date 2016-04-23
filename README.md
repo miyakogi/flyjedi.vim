@@ -19,8 +19,6 @@ This plugin will not conflict with jedi-vim if you disable the auto completion o
 
 - Vim with `+job` and `+channel` features
 - Python 3.4+
-- Jedi
-    - If you use virtualenv, need jedi installed in the virtualenv
 
 ## Usage
 
