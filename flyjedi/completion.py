@@ -8,6 +8,10 @@ import json
 import asyncio
 from pathlib import Path
 
+# if jedi is not installed to this environment, use submodule
+sys.path.append(os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'jedi'))
+
 from jedi.api import Script
 
 import_re = re.compile(r'^\s*from\s+.+\s+import\s+')
