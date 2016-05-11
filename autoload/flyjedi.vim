@@ -101,8 +101,8 @@ endfunction
 
 function! flyjedi#stop_server(...) abort
   " Terminate jedi-server for the current buffer
-  let server_job = get(s:get_server(), 'job')
-  if server_job
+  let server_job = get(s:get_server(), 'job', 0)
+  if type(server_job) > 0
     call job_stop(server_job)
     call remove(s:servers, get(b:, 'flyjedi_root_dir'))
   endif
