@@ -5,7 +5,7 @@ let s:servers = {}
 function! flyjedi#set_root() abort
   let fname = get(g:, 'flyjedi_root_filename', 'setup.py')
   let file = findfile(fname, escape(expand('<afile>:p:h'), ' ') . ';')
-  if l:file != ''
+  if l:file !=# ''
     let b:flyjedi_root_dir = substitute(l:file, '/' . fname . '$', '', 'g' )
   else
     let b:flyjedi_root_dir = ''
@@ -33,9 +33,9 @@ function! flyjedi#dummyomni(findstart, base) abort
 endfunction
 
 function! flyjedi#server_cd(server, ch, msg) abort
-  if a:msg =~ '\m^\d\+$'
+  if a:msg =~# '\m^\d\+$'
     let a:server.port = str2nr(a:msg)
-  elseif a:msg == '' || a:msg ==# 'DETACH'
+  elseif a:msg ==# '' || a:msg ==# 'DETACH'
     return
   else
     echomsg 'FlyJediServer: ' . string(a:msg)
@@ -136,7 +136,7 @@ function! flyjedi#initialize_buffer() abort
   command! -buffer FlyJediEnable call flyjedi#enable()
   command! -buffer FlyJediDisable call flyjedi#disable()
   command! -buffer FlyJediRestart call flyjedi#restart_server()
-  command! -buffer FlyJediClear call flyjedi#completion#clear_cache()
+  " command! -buffer FlyJediClear call flyjedi#completion#clear_cache()
 
   if !get(g:, 'flyjedi_no_autostart')
     call flyjedi#enable()
